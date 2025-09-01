@@ -1,6 +1,8 @@
 # Global settings
 global:
-  namespace: laravel-app
+  namespace: dev2
+  # Set to true when using ArgoCD with CreateNamespace=true
+  skipNamespace: false
 
 # Laravel application configuration
 laravel:

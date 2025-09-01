@@ -1,0 +1,41 @@
+# ArgoCD-specific values override
+global:
+  namespace: dev2
+  skipNamespace: true  # ArgoCD handles namespace creation
+
+laravel:
+  env:
+    APP_ENV: "development"
+    APP_DEBUG: "true"
+    APP_URL: "http://your-node-ip:31119"  # Update with your actual node IP
+
+mysql:
+  auth:
+    rootPassword: "secure-root-password"
+    database: "laraveldb"
+    username: "laraveluser"
+    password: "secure-user-password"
+
+# Resource limits for better resource management
+resources:
+  laravel:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  mysql:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  phpmyadmin:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
