@@ -1,0 +1,52 @@
+{{- if .Values.phpmyadmin.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.phpmyadmin.replicas }}
+  selector:
+    matchLabels:
+      app: phpmyadmin
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin
+    spec:
+      containers:
+      - name: phpmyadmin
+        image: "{{ .Values.phpmyadmin.image.repository }}:{{ .Values.phpmyadmin.image.tag }}"
+        env:
+        - name: PMA_HOST
+          value: mysql-service
+        - name: PMA_PORT
+          value: "{{ .Values.mysql.service.port }}"
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root-password
+        ports:
+        - containerPort: {{ .Values.phpmyadmin.service.targetPort }}
+        {{- if .Values.resources.phpmyadmin }}
+        resources:
+          {{- toYaml .Values.resources.phpmyadmin | nindent 10 }}
+        {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: {{ .Values.phpmyadmin.service.type }}
+  selector:
+    app: phpmyadmin
+  ports:
+    - port: {{ .Values.phpmyadmin.service.port }}
+      targetPort: {{ .Values.phpmyadmin.service.targetPort }}
+      {{- if eq .Values.phpmyadmin.service.type "NodePort" }}
+      nodePort: {{ .Values.phpmyadmin.service.nodePort }}
+      {{- end }}
+{{- end }}

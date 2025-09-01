@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.laravel.replicas }}
+  selector:
+    matchLabels:
+      app: laravel
+  template:
+    metadata:
+      labels:
+        app: laravel
+    spec:
+      containers:
+      # PHP-FPM Container
+      - name: php-fpm
+        image: "{{ .Values.laravel.image.repository }}:{{ .Values.laravel.image.tag }}"
+        imagePullPolicy: {{ .Values.laravel.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+            name: laravel-env
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: laravel-secret
+              key: APP_KEY
+        volumeMounts:
+        - name: app-files
+          mountPath: /var/www
+        {{- if .Values.resources.laravel }}
+        resources:
+          {{- toYaml .Values.resources.laravel | nindent 10 }}
+        {{- end }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                cp -r /var/www/* /tmp/shared/ 2>/dev/null || true
+                
+      # Nginx Container
+      - name: nginx
+        image: "{{ .Values.nginx.image.repository }}:{{ .Values.nginx.image.tag }}"
+        ports:
+        - containerPort: {{ .Values.laravel.service.targetPort }}
+        volumeMounts:
+        - name: app-files
+          mountPath: /var/www
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+        
+      # Init container to set up shared files
+      initContainers:
+      - name: setup-files
+        image: "{{ .Values.laravel.image.repository }}:{{ .Values.laravel.image.tag }}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cp -r /var/www/* /tmp/shared/
+          chown -R 82:82 /tmp/shared/storage /tmp/shared/bootstrap/cache
+          chmod -R 775 /tmp/shared/storage /tmp/shared/bootstrap/cache
+        volumeMounts:
+        - name: app-files
+          mountPath: /tmp/shared
+          
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: app-files
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: laravel-service
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: {{ .Values.laravel.service.type }}
+  selector:
+    app: laravel
+  ports:
+    - port: {{ .Values.laravel.service.port }}
+      targetPort: {{ .Values.laravel.service.targetPort }}
+      {{- if eq .Values.laravel.service.type "NodePort" }}
+      nodePort: {{ .Values.laravel.service.nodePort }}
+      {{- end }}

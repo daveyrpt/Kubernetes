@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  default.conf: |
+{{ .Values.nginx.config | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laravel-env
+  namespace: {{ .Values.global.namespace }}
+data:
+  APP_NAME: {{ .Values.laravel.env.APP_NAME | quote }}
+  APP_ENV: {{ .Values.laravel.env.APP_ENV | quote }}
+  APP_DEBUG: {{ .Values.laravel.env.APP_DEBUG | quote }}
+  APP_URL: {{ .Values.laravel.env.APP_URL | quote }}
+  LOG_CHANNEL: {{ .Values.laravel.env.LOG_CHANNEL | quote }}
+  LOG_LEVEL: {{ .Values.laravel.env.LOG_LEVEL | quote }}
+  DB_CONNECTION: "mysql"
+  DB_HOST: "mysql-service"
+  DB_PORT: "{{ .Values.mysql.service.port }}"
+  DB_DATABASE: {{ .Values.mysql.auth.database | quote }}
+  DB_USERNAME: {{ .Values.mysql.auth.username | quote }}
+  BROADCAST_DRIVER: {{ .Values.laravel.env.BROADCAST_DRIVER | quote }}
+  CACHE_DRIVER: {{ .Values.laravel.env.CACHE_DRIVER | quote }}
+  FILESYSTEM_DRIVER: {{ .Values.laravel.env.FILESYSTEM_DRIVER | quote }}
+  QUEUE_CONNECTION: {{ .Values.laravel.env.QUEUE_CONNECTION | quote }}
+  SESSION_DRIVER: {{ .Values.laravel.env.SESSION_DRIVER | quote }}
+  SESSION_LIFETIME: {{ .Values.laravel.env.SESSION_LIFETIME | quote }}

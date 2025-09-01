@@ -1,0 +1,128 @@
+# Global settings
+global:
+  namespace: laravel-app
+
+# Laravel application configuration
+laravel:
+  image:
+    repository: ghcr.io/daveyrpt/flex-url
+    tag: latest
+    pullPolicy: Always
+  
+  replicas: 1
+  
+  env:
+    APP_NAME: "Laravel"
+    APP_ENV: "local"
+    APP_DEBUG: "true"
+    APP_URL: "http://127.0.0.1:31119"
+    LOG_CHANNEL: "stack"
+    LOG_LEVEL: "debug"
+    BROADCAST_DRIVER: "log"
+    CACHE_DRIVER: "file"
+    FILESYSTEM_DRIVER: "local"
+    QUEUE_CONNECTION: "sync"
+    SESSION_DRIVER: "file"
+    SESSION_LIFETIME: "120"
+  
+  secrets:
+    appKey: "base64:T8J29r0NpLREUGzvUEsO3jQs5dgqlbZ+0lvEQKqIx4c="
+  
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 31119
+
+# Nginx configuration
+nginx:
+  image:
+    repository: nginx
+    tag: alpine
+  
+  config: |
+    server {
+        listen 80;
+        index index.php index.html;
+        root /var/www/public;
+        
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+        
+        location ~ \.php$ {
+            include fastcgi_params;
+            fastcgi_pass 127.0.0.1:9000;  # Same pod, use localhost
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+        
+        location ~ /\.ht {
+            deny all;
+        }
+    }
+
+# MySQL configuration
+mysql:
+  enabled: true
+  image:
+    repository: mysql
+    tag: "8.0"
+  
+  replicas: 1
+  
+  auth:
+    rootPassword: "rootpassword"
+    database: "laraveldb"
+    username: "laraveluser"
+    password: "laravelpass"
+  
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+  
+  service:
+    type: ClusterIP
+    port: 3306
+
+# phpMyAdmin configuration
+phpmyadmin:
+  enabled: true
+  image:
+    repository: phpmyadmin
+    tag: latest
+  
+  replicas: 1
+  
+  service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+
+# Resource limits (optional)
+resources:
+  laravel:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  mysql:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  phpmyadmin:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi

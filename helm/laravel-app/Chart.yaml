@@ -1,0 +1,16 @@
+apiVersion: v2
+name: laravel-app
+description: A Helm chart for Laravel application with MySQL and phpMyAdmin
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - laravel
+  - php
+  - mysql
+  - phpmyadmin
+  - web
+home: https://github.com/daveyrpt/flex-url
+maintainers:
+  - name: Laravel Team
+    email: admin@laravel.local

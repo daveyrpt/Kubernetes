@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: laravel-app
+data:
+  default.conf: |
+    server {
+        listen 80;
+        index index.php index.html;
+        root /var/www/public;
+        
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+        
+        location ~ \.php$ {
+            include fastcgi_params;
+            fastcgi_pass 127.0.0.1:9000;  # Same pod, use localhost
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        }
+        
+        location ~ /\.ht {
+            deny all;
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: laravel-app
+  namespace: laravel-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: laravel
+  template:
+    metadata:
+      labels:
+        app: laravel
+    spec:
+      containers:
+      # PHP-FPM Container (using your original Dockerfile)
+      - name: php-fpm
+        image: ghcr.io/daveyrpt/flex-url:latest  # Your ORIGINAL image
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: laravel-env
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
+        - name: APP_KEY
+          value: "base64:T8J29r0NpLREUGzvUEsO3jQs5dgqlbZ+0lvEQKqIx4c="
+        volumeMounts:
+        - name: app-files
+          mountPath: /var/www
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                cp -r /var/www/* /tmp/shared/ 2>/dev/null || true
+                
+      # Nginx Container
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: app-files
+          mountPath: /var/www
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+        
+      # Init container to set up shared files
+      initContainers:
+      - name: setup-files
+        image: ghcr.io/daveyrpt/flex-url:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cp -r /var/www/* /tmp/shared/
+          chown -R 82:82 /tmp/shared/storage /tmp/shared/bootstrap/cache
+          chmod -R 775 /tmp/shared/storage /tmp/shared/bootstrap/cache
+        volumeMounts:
+        - name: app-files
+          mountPath: /tmp/shared
+          
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: app-files
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: laravel-service
+  namespace: laravel-app
+spec:
+  type: NodePort
+  selector:
+    app: laravel
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 31119

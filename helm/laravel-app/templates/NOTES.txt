@@ -1,0 +1,51 @@
+1. Get the Laravel application URL by running these commands:
+{{- if eq .Values.laravel.service.type "NodePort" }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Values.global.namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services laravel-service)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Values.global.namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.laravel.service.type "LoadBalancer" }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Values.global.namespace }} svc -w laravel-service'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Values.global.namespace }} laravel-service --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.laravel.service.port }}
+{{- else if eq .Values.laravel.service.type "ClusterIP" }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Values.global.namespace }} -l "app=laravel" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Values.global.namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Values.global.namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+{{- if .Values.phpmyadmin.enabled }}
+
+2. Get the phpMyAdmin URL by running these commands:
+{{- if eq .Values.phpmyadmin.service.type "NodePort" }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Values.global.namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services phpmyadmin-service)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Values.global.namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if eq .Values.phpmyadmin.service.type "LoadBalancer" }}
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Values.global.namespace }} svc -w phpmyadmin-service'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Values.global.namespace }} phpmyadmin-service --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.phpmyadmin.service.port }}
+{{- else if eq .Values.phpmyadmin.service.type "ClusterIP" }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Values.global.namespace }} -l "app=phpmyadmin" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:8081 to use phpMyAdmin"
+  kubectl --namespace {{ .Values.global.namespace }} port-forward $POD_NAME 8081:80
+{{- end }}
+
+  Database credentials:
+  - Username: root or {{ .Values.mysql.auth.username }}
+  - Password: {{ .Values.mysql.auth.rootPassword }} or {{ .Values.mysql.auth.password }}
+{{- end }}
+
+3. Check the status of your deployment:
+  kubectl get all -n {{ .Values.global.namespace }}
+
+4. View logs:
+  kubectl logs -n {{ .Values.global.namespace }} deployment/laravel-app -c php-fpm
+  kubectl logs -n {{ .Values.global.namespace }} deployment/laravel-app -c nginx
+{{- if .Values.mysql.enabled }}
+  kubectl logs -n {{ .Values.global.namespace }} deployment/mysql
+{{- end }}
+
+Thank you for installing {{ .Chart.Name }}!

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: laravel-env
+  namespace: laravel-app
+data:
+  APP_NAME: "Laravel"
+  APP_ENV: "local"  # or "development" for now
+  APP_DEBUG: "true"  # Enable debug to see errors
+  APP_URL: "http://127.0.0.1:31119"
+  LOG_CHANNEL: "stack"
+  LOG_LEVEL: "debug"
+  DB_CONNECTION: "mysql"
+  DB_HOST: "mysql-service"
+  DB_PORT: "3306"
+  DB_DATABASE: "laraveldb"
+  DB_USERNAME: "laraveluser"
+  BROADCAST_DRIVER: "log"
+  CACHE_DRIVER: "file"
+  FILESYSTEM_DRIVER: "local"
+  QUEUE_CONNECTION: "sync"
+  SESSION_DRIVER: "file"
+  SESSION_LIFETIME: "120"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: laravel-secret
+  namespace: laravel-app
+type: Opaque
+stringData:
+  APP_KEY: "base64:T8J29r0NpLREUGzvUEsO3jQs5dgqlbZ+0lvEQKqIx4c="  # Generate this!
+  DB_PASSWORD: "root"  # Your actual MySQL password
