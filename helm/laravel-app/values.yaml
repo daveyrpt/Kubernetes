@@ -8,7 +8,7 @@ global:
 laravel:
   image:
     repository: ghcr.io/daveyrpt/flex-url
-    tag: "build-17"
+    tag: "build-18"
     pullPolicy: Always
   
   replicas: 1
