@@ -8,7 +8,7 @@ global:
 laravel:
   image:
     repository: ghcr.io/daveyrpt/flex-url
-    tag: latest
+    tag: "15"
     pullPolicy: Always
   
   replicas: 1
@@ -40,7 +40,7 @@ laravel:
 nginx:
   image:
     repository: nginx
-    tag: alpine
+    tag: "15"
   
   config: |
     server {
@@ -69,7 +69,7 @@ mysql:
   enabled: true
   image:
     repository: mysql
-    tag: "8.0"
+    tag: "15"
   
   replicas: 1
   
@@ -93,7 +93,7 @@ phpmyadmin:
   enabled: true
   image:
     repository: phpmyadmin
-    tag: latest
+    tag: "15"
   
   replicas: 1
   
