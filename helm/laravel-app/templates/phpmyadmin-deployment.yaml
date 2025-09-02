@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: phpmyadmin
-        image: latest
+        image: "{{ .Values.phpmyadmin.image.repository }}:{{ .Values.phpmyadmin.image.tag }}"
         env:
         - name: PMA_HOST
           value: mysql-service
