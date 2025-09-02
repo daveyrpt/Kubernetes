@@ -40,7 +40,7 @@ laravel:
 nginx:
   image:
     repository: nginx
-    tag: "build-17"
+    tag: "alpine"
   
   config: |
     server {
@@ -69,7 +69,7 @@ mysql:
   enabled: true
   image:
     repository: mysql
-    tag: "build-17"
+    tag: "8.0"
   
   replicas: 1
   
@@ -93,7 +93,7 @@ phpmyadmin:
   enabled: true
   image:
     repository: phpmyadmin
-    tag: "build-17"
+    tag: "latest"
   
   replicas: 1
   
