@@ -46,7 +46,7 @@ spec:
               - /bin/sh
               - -c
               - |
-                cp -r /var/www/* /tmp/shared/ 2>/dev/null || true
+                cd /var/www && php artisan optimize
                 
       # Nginx Container
       - name: nginx
@@ -68,7 +68,6 @@ spec:
         - -c
         - |
           cp -r /var/www/* /tmp/shared/
-          cd /tmp/shared && php artisan optimize
           chown -R 82:82 /tmp/shared/storage /tmp/shared/bootstrap/cache
           chmod -R 775 /tmp/shared/storage /tmp/shared/bootstrap/cache
         volumeMounts:
